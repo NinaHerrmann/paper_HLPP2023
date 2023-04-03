@@ -32,7 +32,7 @@
  
 %%\documentclass[sn-nature]{sn-jnl}% Style for submissions to Nature Portfolio journals
 %%\documentclass[sn-basic]{sn-jnl}% Basic Springer Nature Reference Style/Chemistry Reference Style
-\documentclass[sn-mathphys,Numbered]{sn-jnl}% Math and Physical Sciences Reference Style
+\documentclass[sn-mathphys, Numbered]{sn-jnl}% Math and Physical Sciences Reference Style
 %%\documentclass[sn-aps]{sn-jnl}% American Physical Society (APS) Reference Style
 %%\documentclass[sn-vancouver,Numbered]{sn-jnl}% Vancouver Reference Style
 %%\documentclass[sn-apa]{sn-jnl}% APA Reference Style 
@@ -57,6 +57,46 @@
 \usepackage{algorithmicx}%
 \usepackage{algpseudocode}%
 \usepackage{listings}%
+\usepackage[compatibility=false]{caption}
+\usepackage{multirow}
+\usepackage{caption}
+%\usepackage{courier}
+%  \usepackage[
+%backend=biber,
+%style=stylename,
+%]{biblatex}
+
+% \addbibresource{sn-bibliography}
+ 
+\lstdefinelanguage{Muesli}
+{
+	language=C,
+	% list of keywords
+	basicstyle=\ttfamily,
+	keywordstyle = {\color{violet}\bfseries},
+	keywordstyle = [2]{\color{purple}\bfseries},
+	keywordstyle = [3]{\color{magenta}\bfseries},
+	keywordstyle = [4]{\color{blue}\bfseries},
+	otherkeywords = {},%{;,<<,>>,++,+=,=,<,>, int, config},
+	morekeywords = [2]{},%;,=,<,>},
+tabsize=2,
+morekeywords = [4]{Functor2,Functor4,MSL_USERFUNC},
+morekeywords = [4]{mapStencilMM,DA,DC,DM,fold, mapIndex,mapIndexInPlace,zipInPlace,zip,DMMapStencilFunctor, PLATFORM, GPU, CPU_MPMD, PROCESSES, GPUS, MODE, release, CORES, roi_start, roi_end, PLCube},
+basicstyle = {\ttfamily \color{darkgray}},
+numberstyle=\color{darkgray},
+numbers=left,
+belowcaptionskip=0.5em,
+belowskip=0.1em,
+%backgroundcolor = {\color{back-color}},
+stringstyle = {\color{darkgray}},
+sensitive=true, % keywords are not case-sensitive
+morecomment=[l]{//}, % l is for line comment
+morecomment=[s]{/*}{*/}, % s is for start and end delimiter
+keywords={template, size_t, int, float, for, return},
+morestring=[b]", % defines that strings are enclosed in double quotes
+showspaces=false,                
+showstringspaces=false
+}
 %%%%
 
 %%%%%=============================================================================%%%%
@@ -81,6 +121,7 @@
 %% optional argument [theorem] produces theorem numbering sequence instead of independent numbers for Proposition
 \newtheorem{proposition}[theorem]{Proposition}% 
 %%\newtheorem{proposition}{Proposition}% to get separate numbers for theorem and proposition etc.
+\usepackage[nolist,nohyperlinks]{acronym}
 
 \theoremstyle{thmstyletwo}%
 \newtheorem{example}{Example}%
@@ -88,13 +129,24 @@
 
 \theoremstyle{thmstylethree}%
 \newtheorem{definition}{Definition}%
-
+\newcommand{\RN}[1]{\uppercase\expandafter{\romannumeral#1}}
 \raggedbottom
 %%\unnumbered% uncomment this for unnumbered level heads
 
 \begin{document}
 
-\title[Article Title]{Optimizing 3D Stencils on Heterogeneous Computing Environments}
+\begin{acronym}[ACO]
+	\acro{muesli}[Muesli]{Muenster Skeleton Library}
+	\acro{hpc}[HPC]{High Performance Computing}
+	\acro{dsl}[DSL]{domain-specific language}
+	\acro{dc}[DC]{distributed cube}
+	\acro{gpu}[GPU]{graphics processing unit}
+	\acro{mpi}[MPI]{Message Passing Interface}
+	\acro{lbm}[LBM]{Lattice Boltzmann method}
+	\acro{cpu}[CPU]{central processing unit}
+	%s\acroplural{cpu}[CPUs]{Computational processing units}
+\end{acronym}
+\title[Article Title]{Optimizing Three-Dimensional Stencil-Operations on Heterogeneous Computing Environments}
 
 %%=============================================================%%
 %% Prefix	-> \pfx{Dr}
@@ -117,14 +169,14 @@
 \author[1]{\fnm{Herbert} \sur{Kuchen}}\email{kuchen@uni-muenster.de}
 
 
-\affil*[1]{\orgdiv{Department}, \orgname{University of M\"{u}nster}, \orgaddress{\street{Leonardo-Campus 3}, \city{M\"{u}nster}, \postcode{48149}, \country{Germany}}}
+\affil*[1]{\orgdiv{Practical Computer Science}, \orgname{University of M\"{u}nster}, \orgaddress{\street{Leonardo-Campus 3}, \city{M\"{u}nster}, \postcode{48149}, \country{Germany}}}
 
 
 %%==================================%%
 %% sample for unstructured abstract %%
 %%==================================%%
 
-\abstract{Complex algorithms and enormous data sets require to execute programs in parallel to attain results in a reasonable amount of time. Both aspect are combined in the domain in calculation in the three-dimensional space. This includes for example gas distribution simulation or computational fluid dynamics. This work contributes to the area of parallel programming and high-level parallel programming, by discussing, implementing, and analyzing the implementation of a 3D stencil skeleton which works in heterogeneous computing environments. It is demonstrated that the usage of multiple nodes and multiple nodes accelerates the program.}
+\abstract{Complex algorithms and enormous data sets require parallel execution of programs to attain results in a reasonable amount of time. Both aspects are combined in the domain of three-dimensional stencil operations, for example, computational fluid dynamics. This work contributes to the research on high-level parallel programming by discussing the generalizable implementation of a three-dimensional stencil skeleton that works in heterogeneous computing environments. Two exemplary programs, a gas simulation with the Lattice Boltzmann method, and a mean blur, are executed in a multi-node multi-\acp{gpu} environment, proving the runtime improvements in heterogeneous computing environments.}
 
 %%================================%%
 %% Sample for structured abstract %%
@@ -138,7 +190,7 @@
 % 
 % \textbf{Conclusion:} The abstract serves both as a general introduction to the topic and as a brief, non-technical summary of the main results and their implications. The abstract must not include subheadings (unless expressly permitted in the journal's Instructions to Authors), equations or citations. As a guide the abstract should not exceed 200 words. Most journals do not set a hard limit however authors are advised to check the author instructions for the journal they are submitting to.}
 
-\keywords{Skeleton Programming, 3D Stencil Operations}
+\keywords{Skeleton Programming, Three-Dimensional Stencil Operations}
 
 %%\pacs[JEL Classification]{D8, H51}
 
@@ -148,24 +200,256 @@
 
 \section{Introduction}\label{sec1}
 
-The Introduction section, of referenced text \cite{bib1} expands on the background of the work (some overlap with the Abstract is acceptable). The introduction should not include subheadings.
+The field of \ac{hpc} is growing as algorithms become more complex and more data is available. Evaluating massive datasets, therefore, requires writing efficient parallel programs. Most \ac{hpc} environments have multiple nodes equipped with multiple \acp{cpu} and \acp{gpu}. Creating programs which combine multiple types of hardware requires knowledge of low-level frameworks such as \ac{mpi} \citep{MPI}, OpenMP \citep{OpenMP}, and CUDA \citep{CUDA}. Writing a parallel program is error prone and tedious as e.g. out of memory errors, and invalid memory accesses are troublesome to identify even for skilled programmers. Moreover, choosing memory spaces, distributing data, and assigning task to threads are design decision which have a high impact on performance but require experience. Writing a program which combines multiple frameworks overstrains scientist.
 
-Springer Nature does not impose a strict layout as standard however authors are advised to check the individual requirements for the journal they are planning to submit to as there may be journal-level preferences. When preparing your text please also be aware that some stylistic choices are not supported in full text XML (publication version), including coloured font. These will not be replicated in the typeset article if it is accepted. 
+Since experts in this field are hard to find, high-level frameworks are often used. Those frameworks commonly abstract from the distribution of data, provide portable code for different hardware architecture, are adjustable to distinct accelerators, and require less maintainance for the end-user. In 1989 \textsc{Cole} introduced algorithmic skeletons, enclosing reoccurring parallel and distributed computing patterns, such as Map and Reduce as one of the most common approaches to abstract from low-level details \cite{cole1989}. Multiple libraries \cite{ernsting2017,benoit2005}, general frameworks \cite{ernstsson2021skepu,fastflowmulticore}, and and \acp{dsl}\cite{Wrede2019} utilize the concept. 
 
-\section{Results}\label{sec2}
+The paper contributes to the ongoing work by focusing on a particularly arduous operation, namely three-dimensional stencil operations. Stencil operations calculate elements depending on other values inside the data structure and therefore require communication between the computational units used. Those operations are irreplaceable, for e.g., simulation of gas or computational fluid dynamics.
+Efficiently updating data in a generalizable way and dealing with 3D data structures are obstacles not solved in current high-level approaches.
 
-Sample body text. Sample body text. Sample body text. Sample body text. Sample body text. Sample body text. Sample body text. Sample body text.
+This paper firstly elaborates on the related work, focusing on high-level approaches abstracting from problem specific details (Section \ref{sec:relatedwork}). Section \ref{sec:muesli} outlines the library used (muesli), while Section \ref{sec:newmuesli} explains the additional implementation of the three-dimensional skeleton. The work is evaluated in Section \ref{sec:evaluation} discusing our runtime experiments on multiple hardware set-ups. Lastly, Section \ref{sec:conclusion} summarizes out work. 
 
-\section{This is an example for first level head---section head}\label{sec3}
+% \cite{ernsting2012,ernsting2017,benoit2005}, \acp{dsl} \cite{Wrede2019}, and general frameworks \cite{ernstsson2021skepu,aldinucci2017fastflow}.
 
-\subsection{This is an example for second level head---subsection head}\label{subsec2}
 
-\subsubsection{This is an example for third level head---subsubsection head}\label{subsubsec2}
+\section{Related Wok}\label{sec:relatedwork}
 
-Sample body text. Sample body text. Sample body text. Sample body text. Sample body text. Sample body text. Sample body text. Sample body text. 
+Ongoing work discussing three-dimensional stencil operations is twofold. On the one hand, there exist generic high-level frameworks which have the advantage of parallelizing pre- and postprocessing steps, as many of them offer a variety of operations/skeletons. On the other hand, specialized frameworks already contain algorithms' implementations but are often inefficient. 
+Most related regarding high-level skeleton programming, SkePU3 targets multi-node and multi-\ac{gpu} environments for most skeletons in combination with StarPU. However, for stencil operations (MapOverlap), the exchange of data between the programs is missing for multi-node programs \cite{ernstsson2021skepu}. FastFlow added \ac{gpu} support but focuses on communication skeletons and misses a comparable stencil operation \cite{fastflowhetogeneous}\cite{fastflowmulticore}. 
 
-\section{Equations}\label{sec4}
+Specialized libraries such as Palabos for the \acp{lbm} \cite{boltzmannpalabos}, or publications discussing a single method, e.g., the  Helmholtz equation \cite{fftparallel} focus rather on the algorithm and do not include accelerators as \acp{gpu}, which provide a significant speed-up.
+ 
+This work extends the mentioned work as the presented stencil skeleton is generalizable for multiple methods and abstracts from the multiple layers of parallelism. This is profen by showing the implementation of a \ac{lbm} and a three-dimensional mean blur. Both programs run on multiple nodes and with multiple \acp{gpu}.
 
+\section{The {\it Mue}nster {\it S}keleton {\it Li}brary {\it Muesli}}\label{sec:muesli}
+
+
+\lstset{language=muesli}        
+\begin{lstlisting}[basicstyle=\small, language=muesli]
+class Sum : public Functor2<int, int, int>{
+	public: MSL_USERFUNC int operator() (int x, int y) 
+	const {return x+y;}};
+Sum sum;
+auto product = [] (int i, int j) {return i*j;};
+DA<int> a(3,2);                     // delivers: {2,2,2}
+DA<int> b = a.mapIndex(sum);        // delivers: {2,3,4}
+a.zipInPlace(b,product);            // delivers: {4,6,8}
+int scalarproduct = a.fold(sum);    // delivers: 18
+\end{lstlisting}
+
+\section{Three-Dimensional Stencil Operations}\label{sec:newmuesli}
+\begin{wrapfigure}{r}{0.25\textwidth}
+	\centering
+	\includegraphics[width=0.25\textwidth]{stencil.pdf}
+	\caption{Stencil Operation}\label{fig:stencil}
+\end{wrapfigure}
+Stencil operations are map operation which additionally require to read the surrounding elements of the datastructure. 
+Figure \ref{fig:stencil} displays a two-dimensional stencil with the size one. The peculiarity regarding stencil operations on multiple nodes and accelerators is that each execution of the stencil operation requires to update elements which are shared between computational units. As communication of updated elements requires synchronization between the computational nodes it decreases the opportunity for executing task in parallel within the program.
+\ac{muesli} abstracts from all communication between the computational nodes with a MapStencil Skeleton. The usage of the skeleton for the end-user is shown in Listing \ref{lst:stencilmuesli}. 
+
+\subsection{Using the MapStencil Skeleton}
+Firstly, a function which is executed on each element is defined (l. 1-12). Merely functors of type \verb|DCMapStencilFunctor| are permitted to be used with the \verb|mapStencil| skeleton. Therefore, the first argument of the functor has to of type \verb|PLCube| (\textit{PaddedLocalCube}), and the following arguments have to be integers for indexing the data structure. The class \verb|PLCube| most importantly offers a getter taking three index arguments, relieving the end-user from index calculations (l.9). The presented functor calculates the sum of all elements with a radius of two and divides the sum with the number of total elements, therefore calculating a mean blur. This functor can be applied to a distributed cube by calling the mapStencil skeleton as a member function (l.19). The skeleton takes the functor as a template argument, and requires a distributed cube of the same dimension with the current data, the radius of the stencil and the neutral value for border elements. 
+\lstset{language=muesli}        
+\begin{lstlisting}[language=muesli, caption={Exemplary Functor for Stencil Skeleton}, label=lst:stencilmuesli]
+MSL_USERFUNC float update(const PLCube<float> &plCube, 
+						  int x, int y, int z) {
+	float res = 0;
+	const int radius = 2;
+	const int elements = 48;
+	for (int mx = x - radius; mx <= x + radius; mx++) {
+		for (int my = y - radius; my <= y + radius; my++) {
+			for (int mz = z - radius; mz <= z + radius; mz++) {
+				res += plCube(mx, my, mz);
+			}
+		}
+	}
+	return res/(elements);
+}
+...
+main () {
+	...
+	int stencilradius = 2;
+	dcp1->mapStencil<update>(*dcp2, stencilradius, 0);
+	...
+}
+\end{lstlisting}
+
+\subsection{Implementation of the MapStencil Skeleton}
+Adding the MapStencil skeleton to the existing \ac{dc} class requires to add two additional parameters: a vector of \verb|PLCubes| and a supported stencil size. As previously mentioned the \verb|PLCubes| class serves for the end-user to abstract from indexing of the datastructure. To make the access to the different memory spaces efficient each computational unit has a separate \verb|PLCubes| storing merely the elements needed for the calculations of the assigned elements. This design choice makes the class flexible to be used for \acp{cpu} as well as for \acp{gpu}. It contains the following attributes to provide a light, minimal design:
+\begin{itemize}
+	  \setlength\itemsep{0.2em}
+	\item \verb|int width, height, depth| the three dimensions of the datastructure,
+	\item \verb|int stencilSize| size of the Stencil required to calculate the overlapping elements,
+	\item \verb|int neutralValue| used when the index is outside the data structure,
+	\item \verb|T * data, T* topPadding, T* bottomPadding| \ac{cpu} or \ac{gpu} pointer for current data,
+	\item four integers to save global indexes for start and end of datastructure and stencil size.
+\end{itemize}
+Most importantly, the index operator is implemented, taking three integers as arguments returning suitable value. This is either the neutral value or the corresponding element from the \ac{cpu} or \ac{gpu} memory. 
+
+Assuming \acp{gpu} are used a s accelerators, the skeleton updates the current datastructure in case the data is not up to date (Listing \ref{lst:MapStencilImpl} l.6). Afterwards, it synchronizes the \verb|PLCubes| inside one node, and the data between multiple nodes (l.7, l.9). Foreach \ac{gpu} used the mapStencilKernelDC is called executing the functor on the appropiate part of the overall datastructure. In any other case (multiple nodes and cpu) it is only necessary to synchronize the nodes (l. 21), and thereafter call the functor with the corresponding arguments.
+\begin{lstlisting}[language=muesli, caption={Implementation of MapStencil Skeleton}, label=lst:MapStencilImpl]
+template<typename T>
+template<msl::DCMapStencilFunctor<T> f>
+void msl::DC<T>::mapStencil(msl::DC<T> &result, size_t stencilSize, 
+							T neutralValue) {
+	#ifdef __CUDACC__
+	this->updateDevice();
+	syncPLCubes(stencilSize, neutralValue);
+	msl::syncStreams();
+	syncPLCubesMPI(stencilSize);
+	for (int i = 0; i < this->ng; i++) {
+		cudaSetDevice(i);
+		dim3 dimBlock(Muesli::threads_per_block);
+		dim3 dimGrid((this->plans[i].size + dimBlock.x - 1) / dimBlock.x);
+		detail::mapStencilKernelDC<T, f><<<dimGrid, dimBlock, 0, 
+			Muesli::streams[i]>>>(result.plans[i].d_Data, this->plCubes[i], 
+			result.plans[i].size);
+	}
+	msl::syncStreams();
+	result.setCpuMemoryInSync(false);
+	#else
+	syncPLCubesMPI(stencilSize);
+	#ifdef _OPENMP
+	#pragma omp parallel for
+	#endif
+	for (int k = 0; k < this->nLocal; k++) {
+		int l = (k + this->firstIndex) / (ncol*nrow);
+		int j = ((k + this->firstIndex) - l*(ncol*nrow)) / ncol;
+		int i = (k + this->firstIndex) % ncol;
+		result.localPartition[k] = f(this->plCubes[0], i, j, l);
+	}
+	#endif
+}
+\end{lstlisting}
+
+
+\subsection{Example Application for Three-Dimensionl Stencil Operations}
+For the evaluation of our implementation two examples where used: a \ac{lbm} implementation and a mean blur. The exeamplary user function of the mean blur was already shown in Listing \ref{lst:stencilmuesli}. However, the implementation of a \ac{lbm} underlines the applicability for real application contexts.
+
+\acp{lbm} are used for fluid simulations. It distinguishes between the collision and the streaming step which alternate in continuous simulations \cite[p.61ff]{LBMBook}. In the streaming step particles move from one cell to another. In the collision step the fluid flow caused by the colliding particles is calculated.
+The distribution function $f_i(x, t)$ calculates for a cell $x$ and a timestamp $t$ how many particles move in the next step to the neighbour $i$.
+Zero is the cell itself. 
+\begin{equation}
+	f_i(x + c_i \Delta t, t + \Delta t) := f_i^*(x, t)
+\end{equation}
+
+For the collision steps the Bhatnagar-Gross-Krook-operator is used. $f_i^*$ defines the distribution after the collission of the particles, $\Delta t$ the time period to be simulated and $\tau$ a constant defining the convergence of the simulation. Thus $\tau$ influences the viscosity of the gases.
+\begin{equation}
+	f_i^*(x, t) := f_i(x, t) - \frac{\Delta t}{\tau} \left( f_i(x, t) - f_i^{\textrm{eq}}(x, t) \right).
+\end{equation}
+
+The equilibrium state is calculated by
+\begin{equation}
+	f_i^{\textrm{eq}}(x, t) := w_i \rho \left( 1 + \frac{u \cdot c_i}{c_s^2} + \frac{u \cdot c_i}{2 c_s^4} + \frac{u \cdot u}{2 c_s^2} \right),
+\end{equation}
+
+where $w_i$ are the weights of the choosen grid and $c_i$ is the position of the neighbour cells relative to the main cell.
+The constant number $c_s$ is the sound velocity of the model.
+The mass density $\rho$ and the puls density $u$ are defined by
+
+\begin{equation}
+	\rho(x, t) = \sum_{i} f_i(x, t), \hspace{1cm} \rho u (x, t) := \sum_{i} c_i f_i(x, t).
+\end{equation}
+
+
+For the implementation of the \ac{lbm} a D3Q19-Grid was used, D being the number of dimensions and Q the number of neighbours. 
+Both steps (collision and streaming) are combined in one \verb|mapStencil| call. Noteworthy, the implementation has to take into consideration that single cells can be marked as blocked, simulating objects which are barriers for the flow of air or as distributing constant velocity. Therefore, special cells are marked with \verb|Not a Number| values (Listing \ref{lst:lbm} l. 5-7). To simulate this behaviour without requiring additional storage, the handling of the floating numbers is extended. According to the IEEE-754 Standard each float has a maximal exponent with a mantisse which is not equal to zero. To identify special cells the most significant bit of the mantissa of f0 is set, so that the number is definitely understood as a
+\verb|NaN|. The remaining bits of the mantissa can then be used freely to store other data. In the code, bit masks and a struct with bit-
+fields are defined in the code to access this information as easily as possible (Listing \ref{lst:lbmcell}).
+\begin{lstlisting}[language=muesli, caption={Handling of Barriers and Streaming Cells}, label=lst:lbmcell]
+const int FLAG_OBSTACLE = 1 << 0;
+const int FLAG_KEEP_VELOCITY = 1 << 1;
+typedef struct {
+	unsigned int mantissa : 23;
+	unsigned int exponent : 8;
+	unsigned int sign : 1;
+} floatparts ;
+\end{lstlisting}
+
+The data stored for each cell is an \verb|array<float, Q>|. Q is a constant number for the neighbour cells an the cell itself (19). This type is appreviated in the following listing with \verb|cell_t|. Moreover, it is abstracted from the three-dimensional vector operations (l. 28,29,31,34). The user function starts by transforming the current value of the cell into the single float parts (l.4). In case we have a cell which distributes gas (\verb|FLAG_KEEP_VELOCITY|), the cell remains without changes (l.5-7). For all neighbour cells the current amount of paricles is read (l.10-12). In the collision step all cells which are obstacles reverse the flow of air (l.16-23). All other cells calculate the particles streaming from the next cells. 
+\begin{lstlisting}[language=muesli, caption={Implementation of a Exemplary \ac{lbm} User Function}, label=lst:lbm]
+MSL_USERFUNC cell_t update(const PLCube<cell_t> &plCube, int x, 
+                           int y, int z) {
+	cell_t cell = plCube(x, y, z);
+	auto* parts = (floatparts*) &cell[0];
+	if (parts->exponent == 255 && parts->mantissa
+	    & FLAG_KEEP_VELOCITY) {
+		return cell;
+	}
+	// Streaming.
+	for (int i = 1; i < Q; i++) {
+		cell[i] = plCube(x + (int) offsets[i].x, 
+				y + (int) offsets[i].y, z + (int) offsets[i].z)[i];
+	}
+	
+	// Collision.
+	if (parts->exponent == 255 && parts->mantissa & FLAG_OBSTACLE) {
+		if (parts->mantissa & FLAG_OBSTACLE) {
+			cell_t cell2 = cell;
+			for (size_t i = 1; i < Q; i++) {
+				cell[i] = cell2[opposite[i]];
+			}
+		}
+		return cell;
+	}
+	float p = 0;
+	vec3f vp {0, 0, 0};
+	for (size_t i = 0; i < Q; i++) {
+		p += cell[i];
+		vp += offsets[i] * cellwidth * cell[i];
+	}
+	vec3f v = p == 0 ? vp : vp * (1 / p);
+	
+	for (size_t i = 0; i < Q; i++) {
+		cell[i] = cell[i] + deltaT / tau * (feq(i, p, v) - cell[i]);
+	}
+	return cell;
+}
+\end{lstlisting}
+
+\section{Evaluation}\label{sec:evaluation}
+For the experiments, the \ac{hpc} machine Palma \RN{2}\footnote{https://confluence.uni-muenster.de/display/HPC/GPU+Nodes}.
+We used the GeForce RTX 2080 Ti \acp{gpu} partition equiped with 5 nodes each with 8 \acp{gpu} and a Zen3 (EPYC 7513) CPU. Complementary we used the gpuhgx partition equipped with 2 Nodes each with 8 A100 SXM \acp{gpu}. For testing \ac{cpu}-parallelization we used the smp Partition equipeed with 12 nodes with a Zen2 (EPYC 7742) \acp{cpu} with 64 cores. To provide generalizable results, the mean runtime of 20 execution was used. For running the sequential version on the \ac{hpc}, a single Broadwell (E5-2683 v4) \ac{cpu} was used. 
+\begin{table}
+	\resizebox{\textwidth}{!}{
+		\begin{tabular}{|r|r|r|r|r|} \hline
+			Number Nodes & GPU-type &\multicolumn{3}{l|}{Per Node}\\ \hline
+			 & & GPUs & CPU-type & CPUs\\ \hline
+			5 &GeForce RTX 2080 Ti	&8&	Zen3(EPYC 7513)&1 \\ 
+			&	&&	24 cores& \\ \hline
+			2 &Nvidia A100 SXM 80GB	&8&	Zen3(EPYC 7513)&1 \\ 
+			&	&&	24 cores& \\ \hline
+			12 & -	& - &	Zen2 (EPYC 7742)&128 \\ 
+			&	&&	24 cores& \\ \hline
+	\end{tabular}}
+	\caption{Overview of used Hardware}
+	\label{tab:hardware}
+\end{table}
+\begin{figure}[h]%
+	\centering
+	\includegraphics[width=0.9\textwidth]{../20801Node.png}
+	\caption{This is a widefig. This is an example of long caption this is an example of long caption  this is an example of long caption this is an example of long caption}\label{fig1}
+\end{figure}
+
+\begin{figure}[h]%
+	\centering
+	\includegraphics[width=0.9\textwidth]{../20804Nodes.png}
+	\caption{This is a widefig. This is an example of long caption this is an example of long caption  this is an example of long caption this is an example of long caption}\label{fig1}
+\end{figure}
+
+\begin{figure}[h]%
+	\centering
+	\includegraphics[width=0.9\textwidth]{../smp.png}
+	\caption{This is a widefig. This is an example of long caption this is an example of long caption  this is an example of long caption this is an example of long caption}\label{fig1}
+\end{figure}
+
+\section{Conclusion}\label{sec:conclusion}
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TEMPLATE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Equations in \LaTeX\ can either be inline or on-a-line by itself (``display equations''). For
 inline equations use the \verb+$...$+ commands. E.g.: The equation
 $H\psi = E \psi$ is written via the command \verb+$H \psi = E \psi$+.
@@ -173,12 +457,12 @@ $H\psi = E \psi$ is written via the command \verb+$H \psi = E \psi$+.
 For display equations (with auto generated equation numbers)
 one can use the equation or align environments:
 \begin{equation}
-\|\tilde{X}(k)\|^2 \leq\frac{\sum\limits_{i=1}^{p}\left\|\tilde{Y}_i(k)\right\|^2+\sum\limits_{j=1}^{q}\left\|\tilde{Z}_j(k)\right\|^2 }{p+q}.\label{eq1}
+	\|\tilde{X}(k)\|^2 \leq\frac{\sum\limits_{i=1}^{p}\left\|\tilde{Y}_i(k)\right\|^2+\sum\limits_{j=1}^{q}\left\|\tilde{Z}_j(k)\right\|^2 }{p+q}.\label{eq1}
 \end{equation}
 where,
 \begin{align}
-D_\mu &=  \partial_\mu - ig \frac{\lambda^a}{2} A^a_\mu \nonumber \\
-F^a_{\mu\nu} &= \partial_\mu A^a_\nu - \partial_\nu A^a_\mu + g f^{abc} A^b_\mu A^a_\nu \label{eq2}
+	D_\mu &=  \partial_\mu - ig \frac{\lambda^a}{2} A^a_\mu \nonumber \\
+	F^a_{\mu\nu} &= \partial_\mu A^a_\nu - \partial_\nu A^a_\mu + g f^{abc} A^b_\mu A^a_\nu \label{eq2}
 \end{align}
 Notice the use of \verb+\nonumber+ in the align environment at the end
 of each line, except the last, so as not to produce equation numbers on
@@ -186,16 +470,14 @@ lines where no equation numbers are required. The \verb+\label{}+ command
 should only be used at the last line of an align environment where
 \verb+\nonumber+ is not used.
 \begin{equation}
-Y_\infty = \left( \frac{m}{\textrm{GeV}} \right)^{-3}
-    \left[ 1 + \frac{3 \ln(m/\textrm{GeV})}{15}
-    + \frac{\ln(c_2/5)}{15} \right]
+	Y_\infty = \left( \frac{m}{\textrm{GeV}} \right)^{-3}
+	\left[ 1 + \frac{3 \ln(m/\textrm{GeV})}{15}
+	+ \frac{\ln(c_2/5)}{15} \right]
 \end{equation}
 The class file also supports the use of \verb+\mathbb{}+, \verb+\mathscr{}+ and
 \verb+\mathcal{}+ commands. As such \verb+\mathbb{R}+, \verb+\mathscr{R}+
 and \verb+\mathcal{R}+ produces $\mathbb{R}$, $\mathscr{R}$ and $\mathcal{R}$
 respectively (refer Subsubsection~\ref{subsubsec2}).
-
-\section{Tables}\label{sec5}
 
 Tables can be inserted via the normal table and tabular environment. To put
 footnotes inside tables you should use \verb+\footnotetext[]{...}+ tag.
@@ -289,7 +571,6 @@ Element 6 & 500 A & 961  & $922\pm10$  & 900 A & 1268 & $1092\pm40$ \\
 \footnotetext[1]{This is an example of table footnote.}
 \end{sidewaystable}
 
-\section{Figures}\label{sec6}
 
 As per the \LaTeX\ standards you need to use eps images for \LaTeX\ compilation and \verb+pdf/jpg/png+ images for \verb+PDFLaTeX+ compilation. This is one of the major difference between \LaTeX\ and \verb+PDFLaTeX+. Each image should be from a single input .eps/vector image file. Avoid using subfigures. The command for inserting images for \LaTeX\ and \verb+PDFLaTeX+ can be generalized. The package used to insert images in \verb+LaTeX/PDFLaTeX+ is the graphicx package. Figures can be inserted via the normal figure environment as shown in the below example:
 
@@ -310,12 +591,6 @@ As per the \LaTeX\ standards you need to use eps images for \LaTeX\ compilation 
 %% For presentation purpose, we have included  %%
 %% \bigskip command. please ignore this.       %%
 %%=============================================%%
-
-%\begin{figure}[h]%
-%\centering
-%\includegraphics[width=0.9\textwidth]{fig.eps}
-%\caption{This is a widefig. This is an example of long caption this is an example of long caption  this is an example of long caption this is an example of long caption}\label{fig1}
-%\end{figure}
 
 In case of double column layout, the above format puts figure captions/images to single column width. To get spanned images, we need to provide \verb+\begin{figure*}+ \verb+...+ \verb+\end{figure*}+.
 
@@ -430,9 +705,9 @@ To reference line numbers in an algorithm, consider the label declared for the l
 
 Standard \LaTeX\ permits only numerical citations. To support both numerical and author-year citations this template uses \verb+natbib+ \LaTeX\ package. For style guidance please refer to the template user manual.
 
-Here is an example for \verb+\cite{...}+: \cite{bib1}. Another example for \verb+\citep{...}+: \citep{bib2}. For author-year citation mode, \verb+\cite{...}+ prints Jones et al. (1990) and \verb+\citep{...}+ prints (Jones et al., 1990).
+Here is an example for \verb+\cite{...}+: \cite{MPI}. Another example for \verb+\citep{...}+: \citep{MPI}. For author-year citation mode, \verb+\cite{...}+ prints Jones et al. (1990) and \verb+\citep{...}+ prints (Jones et al., 1990).
 
-All cited bib entries are printed at the end of this article: \cite{bib3}, \cite{bib4}, \cite{bib5}, \cite{bib6}, \cite{bib7}, \cite{bib8}, \cite{bib9}, \cite{bib10}, \cite{bib11}, \cite{bib12} and \cite{bib13}.
+All cited bib entries are printed at the end of this article: \cite{MPI}, \cite{MPI}, \cite{MPI}.
 
 \section{Examples for theorem like environments}\label{sec10}
 
@@ -622,7 +897,7 @@ An appendix contains supplementary information that is not an essential part of 
 %% by copying the reference list from your .bbl file, paste it into the main manuscript .tex %%
 %% file, and delete the associated \verb+\bibliography+ commands.                            %%
 %%===========================================================================================%%
-
+%\printbibliography
 \bibliography{sn-bibliography}% common bib file
 %% if required, the content of .bbl file can be included here once bbl is generated
 %%\input sn-article.bbl
