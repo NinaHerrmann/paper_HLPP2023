@@ -47,6 +47,7 @@
 \usepackage{multirow}%
 \usepackage{amsmath,amssymb,amsfonts}%
 \usepackage{amsthm}%
+\usepackage{hhline} 
 \usepackage{mathrsfs}%
 \usepackage[title]{appendix}%
 \usepackage{xcolor}%
@@ -58,14 +59,20 @@
 \usepackage{algpseudocode}%
 \usepackage{listings}%
 \usepackage[compatibility=false]{caption}
-\usepackage{multirow}
 \usepackage{caption}
+\usepackage{lipsum}                     % Dummytext
+\usepackage{xargs}                      % Use more than one optional parameter in a new commands
 %\usepackage{courier}
 %  \usepackage[
 %backend=biber,
 %style=stylename,
 %]{biblatex}
-
+\usepackage[colorinlistoftodos,prependcaption,textsize=tiny]{todonotes}
+\newcommandx{\unsure}[2][1=]{\todo[linecolor=red,backgroundcolor=red!25,bordercolor=red,#1]{#2}}
+\newcommandx{\change}[2][1=]{\todo[linecolor=blue,backgroundcolor=blue!25,bordercolor=blue,#1]{#2}}
+\newcommandx{\info}[2][1=]{\todo[linecolor=OliveGreen,backgroundcolor=OliveGreen!25,bordercolor=OliveGreen,#1]{#2}}
+\newcommandx{\improvement}[2][1=]{\todo[linecolor=Plum,backgroundcolor=Plum!25,bordercolor=Plum,#1]{#2}}
+\newcommandx{\thiswillnotshow}[2][1=]{\todo[disable,#1]{#2}}
 % \addbibresource{sn-bibliography}
  
 \lstdefinelanguage{Muesli}
@@ -81,7 +88,7 @@
 	morekeywords = [2]{},%;,=,<,>},
 tabsize=2,
 morekeywords = [4]{Functor2,Functor4,MSL_USERFUNC},
-morekeywords = [4]{mapStencilMM,DA,DC,DM,fold, mapIndex,mapIndexInPlace,zipInPlace,zip,DMMapStencilFunctor, PLATFORM, GPU, CPU_MPMD, PROCESSES, GPUS, MODE, release, CORES, roi_start, roi_end, PLCube},
+morekeywords = [4]{mapStencilMM,DA,DC,DM,fold, mapIndex,mapIndexInPlace,zipInPlace,zip,DMMapStencilFunctor, PLATFORM, GPU, CPU_MPMD, PROCESSES, GPUS, MODE, release, CORES, roi_start, roi_end, PLCube, MapStencilKernelDC, DCMapStencilFunctor, mapStencil, mapStencilKernelDC, Muesli },
 basicstyle = {\ttfamily \color{darkgray}},
 numberstyle=\color{darkgray},
 numbers=left,
@@ -92,7 +99,7 @@ stringstyle = {\color{darkgray}},
 sensitive=true, % keywords are not case-sensitive
 morecomment=[l]{//}, % l is for line comment
 morecomment=[s]{/*}{*/}, % s is for start and end delimiter
-keywords={template, size_t, int, float, for, return},
+morekeywords = [1]{template, size_t, int, float, for, return, else, ifdef, endif, pragma, omp, parallel},
 morestring=[b]", % defines that strings are enclosed in double quotes
 showspaces=false,                
 showstringspaces=false
@@ -222,10 +229,13 @@ Specialized libraries such as Palabos for the \acp{lbm} \cite{boltzmannpalabos},
 This work extends the mentioned work as the presented stencil skeleton is generalizable for multiple methods and abstracts from the multiple layers of parallelism. This is profen by showing the implementation of a \ac{lbm} and a three-dimensional mean blur. Both programs run on multiple nodes and with multiple \acp{gpu}.
 
 \section{The {\it Mue}nster {\it S}keleton {\it Li}brary {\it Muesli}}\label{sec:muesli}
+Skeleton Programming is mostly present in functional languages since it originates from functional languages \cite{cole1989}. Most of the frameworks are implemented in C/C++ \cite{ernstsson2021skepu, fastflowmulticore,benoit2005, marrow, mallba, Sketo}, as it offers interoperability with multiple parallel frameworks such as OpenMP, \ac{mpi}, CUDA, and OpenCL and is exceptionally performant. Noteworthy, Python recently gained attention for natural science applications as it provides a easy interface to write packages in C/C++ which can provide roughly the same performance as C/C++ programs. However, those packages are very specialized as custom user can only be passed with a overhead decreasing the runtime. Therefore, especially in the \ac{hpc} environment C/C++ is the first choice.
 
+The used library is called \ac{muesli}. \ac{muesli} provides an object-oriented approach offering one, two and three-dimensional datastructures (DA, DM, DC) which call skeletons as member functions. The supported skeletons are for example multiple version of Map and Zip (index and inplace variants), Fold, Gather, and as discussed in this work MapStencil. Internally, , \ac{mpi}, OpenMP, and CUDA are used, which enables simultaneously parallelism on multiple nodes, \acp{cpu}, annd \acp{gpu}. The library can be included with a simple include statement \verb|#include<muesli.h>|. For writing a parallel program, muesli provides abstract methods to state the number of processes and \acp{gpu} used. Apart from that \ac{muesli} abstracts from parallel programming details by internally distributing the datastructures on the available computational units, choosing the number of threads started on the corresponding low-level framework and copying data to the correct memory spaces. This abstraction has the additional effect to reduce errors which are commonly made by inexperienced programmers such as race conditions and inefficient data distribution. 
 
+Listing \ref{lst:examplemuesli} shows a simple program calculating the Scalar product of the distributed arrays a and b. In line 6 a distributed array of size three with a default value of 2 is created. In the skeleton calls in line 7-9 can be seen that skeletons have a user function as an argument which can either be a C++ function or a C++ functor. For the \verb|index| variant in line 7 \ac{muesli} complements the missing arguments internally. For the \verb|zip| skeleton the second required data structure is also passed as an argument. Lastly, l.7+9 show das function can be used in differnt context, firstly for calculating the sum of the index and the value and secondly as a reduction operator.
 \lstset{language=muesli}        
-\begin{lstlisting}[basicstyle=\small, language=muesli]
+\begin{lstlisting}[basicstyle=\small, language=muesli, caption={Scalar product in Muesli}, label=lst:examplemuesli]
 class Sum : public Functor2<int, int, int>{
 	public: MSL_USERFUNC int operator() (int x, int y) 
 	const {return x+y;}};
@@ -248,7 +258,8 @@ Figure \ref{fig:stencil} displays a two-dimensional stencil with the size one. T
 \ac{muesli} abstracts from all communication between the computational nodes with a MapStencil Skeleton. The usage of the skeleton for the end-user is shown in Listing \ref{lst:stencilmuesli}. 
 
 \subsection{Using the MapStencil Skeleton}
-Firstly, a function which is executed on each element is defined (l. 1-12). Merely functors of type \verb|DCMapStencilFunctor| are permitted to be used with the \verb|mapStencil| skeleton. Therefore, the first argument of the functor has to of type \verb|PLCube| (\textit{PaddedLocalCube}), and the following arguments have to be integers for indexing the data structure. The class \verb|PLCube| most importantly offers a getter taking three index arguments, relieving the end-user from index calculations (l.9). The presented functor calculates the sum of all elements with a radius of two and divides the sum with the number of total elements, therefore calculating a mean blur. This functor can be applied to a distributed cube by calling the mapStencil skeleton as a member function (l.19). The skeleton takes the functor as a template argument, and requires a distributed cube of the same dimension with the current data, the radius of the stencil and the neutral value for border elements. 
+Firstly, a function which is executed on each element is defined (l. 1-12). Merely functors of type \verb|DCMapStencilFunctor| are permitted to be used with the \verb|mapStencil| skeleton. Therefore, the first argument of the functor has to of type \verb|PLCube| (\textit{PaddedLocalCube}), and the following arguments have to be integers for indexing the data structure. The class \verb|PLCube| most importantly offers a getter taking three index arguments, relieving the end-user from index calculations (l.9). The presented functor calculates the sum of all elements with a radius of two and divides the sum with the number of total elements, therefore calculating a mean blur. This functor can be applied to a distributed cube by calling the mapStencil skeleton as a member function (l.19). The skeleton takes the functor as a template argument, and requires a distributed cube of the same dimension with the current data \footnote{A variant of the skeleton which immediately overwrites old values by new values is however possible and could be applied,
+	for instance, for implementing the Gau{\ss}-Seidel method for solving systems of linear equations.}, the radius of the stencil\footnote{Other stencil shapes such as rectangular or irregular stencils can be handled by using the smallest surrounding square, although this may introduce some overhead.} and the neutral value for border elements. 
 \lstset{language=muesli}        
 \begin{lstlisting}[language=muesli, caption={Exemplary Functor for Stencil Skeleton}, label=lst:stencilmuesli]
 MSL_USERFUNC float update(const PLCube<float> &plCube, 
@@ -408,39 +419,146 @@ MSL_USERFUNC cell_t update(const PLCube<cell_t> &plCube, int x,
 \end{lstlisting}
 
 \section{Evaluation}\label{sec:evaluation}
-For the experiments, the \ac{hpc} machine Palma \RN{2}\footnote{https://confluence.uni-muenster.de/display/HPC/GPU+Nodes}.
-We used the GeForce RTX 2080 Ti \acp{gpu} partition equiped with 5 nodes each with 8 \acp{gpu} and a Zen3 (EPYC 7513) CPU. Complementary we used the gpuhgx partition equipped with 2 Nodes each with 8 A100 SXM \acp{gpu}. For testing \ac{cpu}-parallelization we used the smp Partition equipeed with 12 nodes with a Zen2 (EPYC 7742) \acp{cpu} with 64 cores. To provide generalizable results, the mean runtime of 20 execution was used. For running the sequential version on the \ac{hpc}, a single Broadwell (E5-2683 v4) \ac{cpu} was used. 
-\begin{table}
+Our approach requires to measure the speedup achieved. For this purpose the presented exemplary programs, a mean blur and a \ac{lbm} implementation were executed on the \ac{hpc} machine Palma \RN{2}\footnote{https://confluence.uni-muenster.de/pages/viewpage.action?pageId=27755336}.
+Table \ref{tab:hardware} list the hardware specification of the partitions used. Those include two \ac{gpu}-partitions and one \ac{cpu}-partition. 
+
+The gpu2080 partition is equiped with 5 nodes each with 8 GeForce RTX 2080 Ti \acp{gpu}. Complementary we used the gpuhgx partition equipped with 2 Nodes each with 8 A100 SXM \acp{gpu}. One major advantage of the Nvidia A100 SXM is that one \ac{gpu} has significantly more memory (80GB in contrast to 11GB) and more cores (6912 compared to 612). Therefore, experimenting with two partitions expands the research to proove the generalizability on varying \acp{gpu}. For testing \ac{cpu}-parallelization the zen2 partition equiped with 12 nodes with each one Zen2 (EPYC 7742) \acp{cpu} with 64 cores. To provide generalizable results, the mean runtime of 20 execution was used. For running the sequential version on the \ac{hpc}, a single Broadwell (E5-2683 v4) \ac{cpu} was used. 
+\begin{table}[b]
 	\resizebox{\textwidth}{!}{
-		\begin{tabular}{|r|r|r|r|r|} \hline
-			Number Nodes & GPU-type &\multicolumn{3}{l|}{Per Node}\\ \hline
-			 & & GPUs & CPU-type & CPUs\\ \hline
-			5 &GeForce RTX 2080 Ti	&8&	Zen3(EPYC 7513)&1 \\ 
-			&	&&	24 cores& \\ \hline
-			2 &Nvidia A100 SXM 80GB	&8&	Zen3(EPYC 7513)&1 \\ 
-			&	&&	24 cores& \\ \hline
-			12 & -	& - &	Zen2 (EPYC 7742)&128 \\ 
-			&	&&	24 cores& \\ \hline
+		\begin{tabular}{|r||r|r|r|r|r|r|} \hline
+			\multirow{+2}{*}{Identifier}& \multirow{+2}{*}{Nodes} & \multirow{+2}{*}{\ac{gpu}/\ac{cpu}-type} &\multicolumn{2}{l|}{Per Node}&\multicolumn{2}{l|}{per computational unit}\\ \hhline{~~~----}
+			& & & \acp{gpu} & \acp{cpu}& storage& cores\\ \hline
+			gpu2080& 5 &GeForce RTX 2080 Ti	&	8&1 &11GB&612\\  \hline
+			gpuhgx&2 &Nvidia A100 SXM&8&1 &80GB&6912 \\ \hline
+			zen2&12 & Zen2 (EPYC 7742) &-&128&496GB& 64\\ \hline
 	\end{tabular}}
 	\caption{Overview of used Hardware}
 	\label{tab:hardware}
+\end{table} 
+Two classification numbers are particularly important for the evaluation of the programs depending on the hardware, the maximum storage and the number of cores. As can be seen in the last two columns of Table \ref{tab:hardware} the \ac{gpu} partitions vary. Therefore, experiments with the gpuhgx partition could be executed with bigger data structures, and provide a better speed-up.
+
+
+\subsection{\ac{lbm} Experiment}
+The \ac{lbm} is used to simulate the flow of fluid in the three dimensional space. Consequently, it is reasonable to run a experiment which does not only execute the mapSkeleton one time, but has multiple iterations simulating multiple dispersion steps. For every experiment 200 iteration were chosen to make runtimes comparable between different data sizes. 
+
+Datasizes were chosen by exceeding the available storage. For the \ac{lbm} each cell requires 76 bytes, as each cell stores 19 32-bit floating point numbers. For the calculation a data structure to read and one to write is necessary.
+ The required space for the program can be simply calculated by:
+\[d(\textrm{gb}) := \sqrt[3]{\textrm{gb} \cdot \frac{2^{30}}{2 \cdot 76}}\]
+
+This result for the RTX 2080 Ti \ac{gpu} in a maximum side length of {426}, for the A100 SXM in a side length of {826}. Although the \ac{cpu} partition would support bigger data structures the datasizes was not increased to the maximum, as the speed-up converged, and the run-time of the sequential program became unreasonable high (10 hours for calculating the \ac{lbm} simulation for a datasize of 960$^3$). 
+Table \ref{tab:speedupsinglelbm} shows that for the \ac{cpu}-zen2 partition a speed-up of 116 can be reached. As the partition has 64 cores, this effect is reached by multithreading, in total 128 threads were started on the 64 cores available. In this scenario it should be considered that the calculations are easy to execute in parallel as all data resides on the memory of the single \ac{cpu} or \ac{gpu}, acccessible for all threads. In contrast, the  GeForce RTX 2080 Ti has 612 cores allowing to execute threads in parallel.
+\todo[inline]{reasoning what is the maximum of threads which can be executed? what slows the application down?}
+ 
+\begin{table}[b]
+	\resizebox{\textwidth}{!}{
+		\begin{tabular}{|r||r|r|r||r|r||r|r|} \hline
+Datasize $^3$&seq&cpu&Speed-up&gpuhgx&speed-up&gpu2080&speed-up\\ \hline
+40&1.69&0.48&3.5&0.01&141.12&0.02&75.86\\ \hline
+80&15.75&0.58&27.09&0.06&275.29&0.14&115.86\\ \hline
+120&56&1.3&42.96&0.18&317.67&0.44&128.28\\ \hline
+160&135.61&2.02&67.19&0.41&332.04&1.14&119.4\\ \hline
+\multicolumn{8}{|l|}{...}\\ \hline 
+440&2994.47&30.35&98.67&8.69&344.4&21.65&\textbf{138.29}\\ \hline
+\multicolumn{8}{|l|}{...}\\ \hline 
+800&18572.9&173.88&106.81&52.52&\textbf{353.6}&-&- \\ \hline 
+\multicolumn{8}{|l|}{...}\\ \hline 
+960&34880.8&300.44&\textbf{116.1}&-&-&-&- \\ \hline
+	\end{tabular}}
+	\caption{Speed-up for the Parallel Implementation of the \ac{lbm} Gas Simulation for Single \ac{gpu} or \ac{cpu} Programs}
+	\label{tab:speedupsinglelbm}
 \end{table}
+
+To assure that a low-level program is not significantly faster, a native implementation was programmed to be compared againt the \ac{muesli} program. Figure \ref{fig:multigpumueslinative}. As can be seen, the implementations are close to each other. In contrast to the native implementation \ac{muesli} has a slight overhead, however, as it is very small this difference is not important. Runtimes for bigger data structures are not included for one \ac{gpu} and two \acp{gpu} to increase the readbility of the graph. For two \acp{gpu} a speed-up of 1.7 compared to the single \ac{gpu} version can be achieved and for four \acp{gpu} a speed-up of 2.75 is achieved. To assure that the overhead is caused by the communication the time for the update function was measured separatly. Without the communication a speed-up of 1.94 and 3.88 was achieved which can be subscribed to the synchronization of streams. However, using multiple \acp{gpu} also has the advantage of processing bigger data structures. 
 \begin{figure}[h]%
 	\centering
 	\includegraphics[width=0.9\textwidth]{../20801Node.png}
-	\caption{This is a widefig. This is an example of long caption this is an example of long caption  this is an example of long caption this is an example of long caption}\label{fig1}
+	\caption{Runtime comparison of a multi-\ac{gpu} \ac{muesli} program and Native Implementation of the \ac{lbm} on GeForce RTX 2080 Ti \acp{gpu}}\label{fig:multigpumueslinative}
 \end{figure}
-
+Taking multiple levels of parallelism into consideration the program is also capable to run on multiple nodes equiped with mutliple \acp{gpu}. Runtimes are depicted in Figure \ref{fig:lbmmnodemgpu}. 
+\begin{table}
+	\resizebox{\textwidth}{!}{
+	\begin{tabular}{r||r|r|r||r|r||r|r} \hline
+		Datasize $^3$&\acp{gpu} &1 N&1 N-Com&2 Ns&2 Ns -Com&Speed-up&Speed-up\\ \toprule \hline
+		40&1&0.02&0.02&0.03&0.03&0.69&0.7\\ \hline
+		40&2&0.03&0.02&0.1&0.02&0.34&1.24\\ \hline
+		40&4&0.04&0.01&0.07&0.01&0.54&1\\ \hline \hline
+		280&1&8.59&8.59&4.52&4.52&1.9&1.9\\ \hline
+		280&2&5.09&4.44&3.13&2.28&1.62&1.95\\ \hline
+		280&4&3.58&2.23&2.73&1.16&1.31&1.93\\  \hline \hline
+		400&1&25.23&25.23&13.07&13.06&1.93&1.93\\ \hline
+		400&2&14.2&12.98&8.17&6.59&1.74&1.97 \\ \hline
+		400&4&9.16&6.5&6.34&3.31&1.44&1.97 \\ \botrule
+	\end{tabular}}
+	\caption{Speed-up for the Parallel Implementation of the \ac{lbm} Gas Simulation for Single \ac{gpu} or \ac{cpu} Programs}
+	\label{tab:speedupsinglelbm}
+\end{table}
+\begin{table}
+	\resizebox{\textwidth}{!}{
+		\begin{tabular}{r||r|r r|r r|r|r} \toprule
+			Datasize $^3$&\acp{gpu} &1 N&1 N-Com&4 Ns&4 Ns -Com&Speed-up&Speed-up\\ \midrule 
+			40&1&0.02&0.02&0.04&0.01&0.56&2.7\\ 
+			40&2&0.03&0.02&0.08&0.02&0.44&1.29\\
+			40&4&0.04&0.01&0.07&0.01&0.55&0.99\\ \midrule
+			280&1&8.59&8.59&2.74&2.16&3.14&3.97\\ 
+			280&2&5.09&4.44&2.63&1.19&1.93&3.74\\ 
+			280&4&3.58&2.23&2.06&0.39&1.73&5.74\\  \midrule 
+			400&1&25.23&25.23&7.21&6.32&3.5&3.99\\ 
+			400&2&14.2&12.98&6&3.35&2.37&3.87\\ 
+			400&4&9.16&6.5&5.14&1.7&1.78&3.82\\ 
+			\botrule
+	\end{tabular}}
+	\caption{Speed-up for the Parallel Implementation of the \ac{lbm} Gas Simulation for single \ac{gpu} Programs}
+	\label{tab:speedupsinglelbm}
+\end{table}
 \begin{figure}[h]%
 	\centering
 	\includegraphics[width=0.9\textwidth]{../20804Nodes.png}
-	\caption{This is a widefig. This is an example of long caption this is an example of long caption  this is an example of long caption this is an example of long caption}\label{fig1}
+	\caption{Runtimes of the \ac{lbm} \ac{muesli} program on multiple nodes and multiple \acp{gpu}}\label{fig:lbmmnodemgpu}
 \end{figure}
 
 \begin{figure}[h]%
 	\centering
-	\includegraphics[width=0.9\textwidth]{../smp.png}
-	\caption{This is a widefig. This is an example of long caption this is an example of long caption  this is an example of long caption this is an example of long caption}\label{fig1}
+	\includegraphics[width=0.9\textwidth]{graphs/boltzmansmp.png}
+	\caption{\ac{cpu} Runtimes of the \ac{lbm} \ac{muesli} program}\label{fig1}
+\end{figure}
+
+\section{Blur Example}
+\begin{figure}[h]%
+	\centering
+	\includegraphics[width=0.9\textwidth]{graphs/blurhgx.png}
+	\caption{Runtimes of the Blur \ac{muesli} program on A100 \acp{gpu}}\label{fig1}
+\end{figure}
+
+\begin{figure}[h]%
+	\centering
+	\includegraphics[width=0.9\textwidth]{graphs/gaussian1node2080.png}
+	\caption{Runtimes of the Blur \ac{muesli} program on a GeForce RTX 2080 Ti \acp{gpu}}\label{fig1}
+\end{figure}
+\begin{table}
+	\resizebox{\textwidth}{!}{
+		\begin{tabular}{r|r||rr|rr|r|r|rr|r|r} \toprule
+		blur&	Datasize $^3$ &1 N&1 N-Com&4 Ns&4 Ns -Com&Speed-up&Speed-up&8 Ns&8 Ns -Com&Speed-up&Speed-up\\ \midrule
+			\multirow{4}{*}{2}&120&0.16&0.16&0.07&0.05&2.1&3.41&0.09&0.03&1.76&5.56 \\ 
+			&280&1.5&1.5&0.58&0.42&2.6&3.55&0.55&0.23&2.74&6.55 \\ 
+			&400&4.46&4.46&1.44&1.15&3.09&3.89&1.24&0.61&3.61&7.33 \\ 
+			&560&13.56&13.56&3.99&3.4&3.4&3.99&2.95&1.76&4.59&7.71\\    \midrule 
+			\multirow{4}{*}{8}&120&4.54&4.54&1.47&1.35&3.09&3.35&1.04&0.79&4.37&5.74\\ 
+			&280&60.58&60.58&16.44&15.85&3.68&3.82&9.71&8.47&6.24&7.15\\ 
+			&400&192.61&192.61&51.59&50.34&3.73&3.83&29.52&26.96&6.52&7.14\\ 
+			&560&563.2&563.2&148.68&146.41&3.79&3.85&83.38&78.58&6.75&7.17\\   \midrule 
+			\multirow{4}{*}{12}&120&13.59&13.59&4.2&4.03&3.23&3.37&2.53&2.17&5.38&6.27\\ 
+			&280&252.54&252.54&69.24&68.32&3.65&3.7&37.92&35.97&6.66&7.02\\ 
+			&400&836.59&836.58&222.12&220.38&3.77&3.8&118.89&115.15&7.04&7.27\\ 
+			&560&2464.76&2464.76&643.33&640.16&3.83&3.85&338.46&331.65&7.28&7.43\\   
+			\botrule
+	\end{tabular}}
+	\caption{Speed-up for the Parallel Implementation of the \ac{lbm} Gas Simulation for single \ac{gpu} Programs}
+	\label{tab:speedupsinglelbm}
+\end{table}
+\begin{figure}[h]%
+	\centering
+	\includegraphics[width=0.9\textwidth]{graphs/blurmnode.png}
+	\caption{Runtimes of the Blur \ac{muesli} program on multiple GeForce RTX 2080 Ti \acp{gpu}}\label{fig1}
 \end{figure}
 
 \section{Conclusion}\label{sec:conclusion}
